@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "strict": true,
+    "module": "esnext",
+    "target": "es5",
+    "lib": ["es2016", "dom"]
+  },
+  "files": ["src/index.ts"]
+}

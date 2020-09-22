@@ -1,0 +1,23 @@
+{
+  "name": "pcron",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "module": "dist/index.ejs",
+  "types": "dist/index.d.ts",
+  "repository": "git@github.com:duxiaofeng-github/pcron.git",
+  "author": "duxiaofeng-github <297951292@qq.com>",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "microbundle watch --no-compress --no-sourcemap",
+    "build": "microbundle",
+    "test": "jest"
+  },
+  "dependencies": {
+    "dayjs": "^1.8.36"
+  },
+  "devDependencies": {
+    "jest": "^26.4.2",
+    "microbundle": "^0.12.3"
+  }
+}
