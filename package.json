@@ -11,12 +11,14 @@
     "clean": "rm -rf dist",
     "dev": "microbundle watch --no-compress --no-sourcemap",
     "build": "microbundle",
-    "test": "jest"
+    "test": "cd test && jest"
   },
   "dependencies": {
     "dayjs": "^1.8.36"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.10.4",
+    "@types/jest": "^26.0.14",
     "jest": "^26.4.2",
     "microbundle": "^0.12.3"
   }

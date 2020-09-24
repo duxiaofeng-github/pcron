@@ -1,20 +1,22 @@
 import dayjs, { Dayjs, OpUnitType } from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import weekday from "dayjs/plugin/weekday";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 
 dayjs.extend(weekOfYear);
 dayjs.extend(weekday);
+dayjs.extend(advancedFormat);
 
 enum Unit {
-  Year,
-  Month,
-  Day,
-  Hour,
-  Min,
-  Sec,
-  WeekOfYear,
-  Weekday,
-  WeekOfMonth,
+  Year = "year",
+  Month = "month",
+  Day = "day",
+  Hour = "hour",
+  Min = "minute",
+  Sec = "second",
+  WeekOfYear = "weekOfYear",
+  Weekday = "weekday",
+  WeekOfMonth = "weekOfMonth",
 }
 
 function isWeek(expression: string) {
@@ -22,10 +24,10 @@ function isWeek(expression: string) {
 }
 
 function isWeekOfYear(blocks: string[]) {
-  return blocks.length === 5;
+  return blocks.length === 6;
 }
 
-const validateRules = {
+const defaultRanges = {
   [Unit.Year]: undefined,
   [Unit.Month]: [1, 12],
   [Unit.Day]: [1, 31],
@@ -37,20 +39,26 @@ const validateRules = {
   [Unit.Weekday]: [0, 6],
 };
 
+function getFullRange(unit: Unit): Range[] | undefined {
+  const range = defaultRanges[unit];
+
+  return range ? [{ start: range[0], end: range[1] }] : undefined;
+}
+
 function validateRange(start: number, end: number, type: Unit) {
   if (isNaN(start) || isNaN(end)) {
     return false;
   }
 
-  const rule = validateRules[type];
+  const range = defaultRanges[type];
 
-  if (rule == null) {
+  if (range == null) {
     return true;
   }
 
-  const [startRule, endRule] = rule;
+  const [startEdge, endEdge] = range;
 
-  return start >= startRule && end <= endRule;
+  return start >= startEdge && end <= endEdge;
 }
 
 function parseRange(range: string, type: Unit): Range[] {
@@ -60,17 +68,19 @@ function parseRange(range: string, type: Unit): Range[] {
 
   const rangeArray = range.split(",");
 
-  return rangeArray.map((item) => {
-    const [startString, endString] = item.split("-");
-    const start = parseInt(startString);
-    const end = parseInt(endString);
+  return rangeArray
+    .map((item) => {
+      const [startString, endString] = item.split("-");
+      const start = parseInt(startString);
+      const end = endString != null ? parseInt(endString) : start;
 
-    if (!validateRange(start, end, type)) {
-      throw new Error(`Invalid range ${start}-${end} in`);
-    }
+      if (!validateRange(start, end, type)) {
+        throw new Error(`Invalid range ${start}-${end} in`);
+      }
 
-    return { start, end };
-  });
+      return { start, end };
+    })
+    .sort((a, b) => a.start - b.start);
 }
 
 function parseBlocks(options: {
@@ -110,49 +120,30 @@ function parseBlocks(options: {
   };
 }
 
-function getPeriodByUnit(period: string, unit: Unit): { periodNumber: number; opUnit: OpUnitType } {
-  const [dateSection, timeSection = ""] = period.replace("P", "").split("T");
-  let result;
-  let opUnit: OpUnitType;
-
+function transformUnitToDayjsUnit(unit: Unit): OpUnitType {
   switch (unit) {
     case Unit.Sec:
-      result = timeSection.match(/(\d+)[s]/i);
-      opUnit = "second";
-      break;
+      return "second";
     case Unit.Min:
-      result = timeSection.match(/(\d+)[m]/i);
-      opUnit = "minute";
-      break;
+      return "minute";
     case Unit.Hour:
-      result = timeSection.match(/(\d+)[h]/i);
-      opUnit = "hour";
-      break;
+      return "hour";
     case Unit.Day:
+      return "day";
     case Unit.Weekday:
+      return "day";
     case Unit.WeekOfMonth:
+      return "week";
     case Unit.WeekOfYear:
-      result = dateSection.match(/(\d+)[d]/i);
-      opUnit = "day";
-      break;
+      return "week";
     case Unit.Month:
-      result = dateSection.match(/(\d+)[m]/i);
-      opUnit = "month";
-      break;
+      return "month";
     case Unit.Year:
-      result = dateSection.match(/(\d+)[y]/i);
-      opUnit = "year";
-      break;
-  }
-
-  if (result) {
-    return { periodNumber: parseInt(result[1]), opUnit };
-  } else {
-    return { periodNumber: NaN, opUnit };
+      return "year";
   }
 }
 
-function moveToStartOrEndOfRage(time: Dayjs, unit: Unit, range: Range, isNext: boolean) {
+function moveToStartOrEndOfRange(unit: Unit, time: Dayjs, range: Range, isNext: boolean) {
   const edge = isNext ? range.start : range.end;
 
   switch (unit) {
@@ -172,91 +163,213 @@ function moveToStartOrEndOfRage(time: Dayjs, unit: Unit, range: Range, isNext: b
     case Unit.WeekOfYear:
       return time.week(edge);
     case Unit.Month:
-      return time.month(edge);
+      return time.month(edge - 1);
     case Unit.Year:
       return time.year(edge);
   }
 }
 
-function getOffsetByRanges(num: number, ranges: Range[]) {
-  let rangeIndex = 0;
+function getPrevUnit(unit: Unit, options: Options) {
+  const { weekOfMonth: weekOfMonthRanges, day: dayRanges } = options;
+
+  switch (unit) {
+    case Unit.Sec:
+      return Unit.Min;
+    case Unit.Min:
+      return Unit.Hour;
+    case Unit.Hour:
+      return dayRanges != null ? Unit.Day : Unit.Weekday;
+    case Unit.Day:
+      return Unit.Month;
+    case Unit.Weekday:
+      return weekOfMonthRanges != null ? Unit.WeekOfMonth : Unit.WeekOfYear;
+    case Unit.WeekOfMonth:
+      return Unit.Year;
+    case Unit.WeekOfYear:
+      return Unit.Year;
+    case Unit.Month:
+      return Unit.Year;
+    case Unit.Year:
+      return null;
+  }
+}
+
+function getNextUnit(unit: Unit, options: Options): Unit | null {
+  const { weekOfYear: weekOfYearRanges, weekOfMonth: weekOfMonthRanges } = options;
+
+  switch (unit) {
+    case Unit.Sec:
+      return null;
+    case Unit.Min:
+      return Unit.Sec;
+    case Unit.Hour:
+      return Unit.Min;
+    case Unit.Day:
+      return Unit.Hour;
+    case Unit.Weekday:
+      return Unit.Hour;
+    case Unit.WeekOfMonth:
+      return Unit.Weekday;
+    case Unit.WeekOfYear:
+      return Unit.Weekday;
+    case Unit.Month:
+      return weekOfMonthRanges != null ? Unit.WeekOfMonth : Unit.Day;
+    case Unit.Year:
+      return weekOfYearRanges != null ? Unit.WeekOfYear : Unit.Month;
+  }
+}
+
+function getPeriodByUnit(period: string, unit: Unit): number {
+  const [dateSection, timeSection = ""] = period.replace("P", "").split("T");
+  let result;
+
+  switch (unit) {
+    case Unit.Sec:
+      result = timeSection.match(/(\d+)s/i);
+      break;
+    case Unit.Min:
+      result = timeSection.match(/(\d+)m/i);
+      break;
+    case Unit.Hour:
+      result = timeSection.match(/(\d+)h/i);
+      break;
+    case Unit.Day:
+    case Unit.Weekday:
+      result = dateSection.match(/(\d+)d/i);
+      break;
+    case Unit.WeekOfMonth:
+    case Unit.WeekOfYear:
+      result = dateSection.match(/(\d+)w/i);
+      break;
+    case Unit.Month:
+      result = dateSection.match(/(\d+)m/i);
+      break;
+    case Unit.Year:
+      result = dateSection.match(/(\d+)y/i);
+      break;
+  }
+
+  const periodNumber = result ? parseInt(result[1]) : 0;
+
+  if (isNaN(periodNumber)) {
+    throw new Error(`invalid period ${period}, unit: ${unit}`);
+  }
+
+  return periodNumber;
+}
+
+function addOrSubtractPeriod(time: Dayjs, period: number, unit: Unit, isNext: boolean) {
+  const opUnit = transformUnitToDayjsUnit(unit);
+
+  return isNext ? time.add(period, opUnit) : time.subtract(period, opUnit);
+}
+
+function moveToNextPeriodByUnit(
+  unit: Unit,
+  time: Dayjs,
+  options: Options,
+  isNext: boolean,
+  onlyChecking: boolean
+): { newTime: Dayjs | null; inRange: boolean } {
+  const value = getValueByUnit(time, unit);
+  const ranges = withDefaultRanges(unit, getRangesByUnit(options, unit));
+
+  if (ranges) {
+    if (ranges.length) {
+      const { rangeIndex, inRange } = getRangeInfo(value, ranges, isNext);
+
+      if (inRange) {
+        if (!onlyChecking) {
+          const { period } = options;
+          const periodNumber = getPeriodByUnit(period, unit);
+          const newTime = addOrSubtractPeriod(time, periodNumber, unit, isNext);
+
+          return moveToNextPeriodByUnit(unit, newTime, options, isNext, true);
+        }
+      } else {
+        let nextRangeIndex = isNext ? rangeIndex + 1 : rangeIndex - 1;
+        let needToCarry = false;
+
+        if (nextRangeIndex > ranges.length - 1) {
+          nextRangeIndex = 0;
+          needToCarry = true;
+        } else if (nextRangeIndex < 0) {
+          nextRangeIndex = ranges.length - 1;
+          needToCarry = true;
+        }
+
+        const nextRange = ranges[nextRangeIndex];
+        const newTimeWithCurrentUnit = moveToStartOrEndOfRange(unit, time, nextRange, isNext);
+        const nextUnits = [];
+        let nextUnit: Unit | null = unit;
+
+        while (nextUnit != null) {
+          nextUnit = getNextUnit(nextUnit, options);
+
+          if (nextUnit != null) {
+            nextUnits.push(nextUnit);
+          }
+        }
+
+        let newTimeWithNextUnit = newTimeWithCurrentUnit;
+
+        nextUnits.forEach((nextUnit) => {
+          const nextUnitRanges = withDefaultRanges(nextUnit, getRangesByUnit(options, nextUnit));
+
+          if (nextUnitRanges != null) {
+            const nextUnitRange = isNext ? nextUnitRanges[0] : nextUnitRanges[nextUnitRanges.length - 1];
+
+            newTimeWithNextUnit = moveToStartOrEndOfRange(nextUnit, newTimeWithNextUnit, nextUnitRange, isNext);
+          }
+        });
+
+        if (needToCarry) {
+          const prevUnit = getPrevUnit(unit, options);
+
+          if (prevUnit == null) {
+            return { newTime: null, inRange };
+          } else {
+            const newTimeWithPrevUnit = addOrSubtractPeriod(newTimeWithNextUnit, 1, prevUnit, isNext);
+
+            return {
+              newTime: moveToNextPeriodByUnit(prevUnit, newTimeWithPrevUnit, options, isNext, true).newTime,
+              inRange,
+            };
+          }
+        } else {
+          return { newTime: newTimeWithNextUnit, inRange };
+        }
+      }
+    } else {
+      const { period } = options;
+      const periodNumber = getPeriodByUnit(period, unit);
+      return { newTime: addOrSubtractPeriod(time, periodNumber, unit, isNext), inRange: true };
+    }
+  }
+
+  return { newTime: time, inRange: true };
+}
+
+function getRangeInfo(num: number, ranges: Range[], isNext: boolean) {
+  let rangeIndex = isNext ? -1 : ranges.length;
   let inRange = false;
 
   for (let i = 0; i < ranges.length; i++) {
-    rangeIndex = i;
+    const nextRangeIndex = isNext ? rangeIndex + 1 : rangeIndex - 1;
+    const nextRange = ranges[nextRangeIndex];
 
-    const range = ranges[i];
-    const prevRange = ranges[i - 1];
+    if (num >= nextRange.start) {
+      rangeIndex = nextRangeIndex;
+    }
 
-    if (num >= range.start && num <= range.end) {
+    if (num >= nextRange.start && num <= nextRange.end) {
       inRange = true;
 
-      break;
-    } else if (prevRange != null && num > prevRange.end && num < range.start) {
       break;
     }
   }
 
   return { rangeIndex, inRange };
-}
-
-function getStartOrEndTimeOfNextRange(
-  unit: Unit,
-  currentTime: Dayjs,
-  options: Options,
-  ranges: Range[],
-  rangeIndex: number,
-  isNext: boolean
-): Dayjs | null {
-  const { weekOfMonth: weekOfMonthRanges, day: dayRanges } = options;
-  const nextRange = ranges[rangeIndex + 1];
-
-  if (nextRange != null) {
-    return moveToStartOrEndOfRage(currentTime, unit, nextRange, isNext);
-  } else {
-    let nextUnit;
-
-    switch (unit) {
-      case Unit.Sec:
-        nextUnit = Unit.Min;
-        break;
-      case Unit.Min:
-        nextUnit = Unit.Hour;
-        break;
-      case Unit.Hour:
-        nextUnit = dayRanges != null ? Unit.Day : Unit.Weekday;
-        break;
-      case Unit.Day:
-        nextUnit = Unit.Month;
-        break;
-      case Unit.Weekday:
-        nextUnit = weekOfMonthRanges != null ? Unit.WeekOfMonth : Unit.WeekOfYear;
-        break;
-      case Unit.WeekOfMonth:
-        nextUnit = Unit.Year;
-        break;
-      case Unit.WeekOfYear:
-        nextUnit = Unit.Year;
-        break;
-      case Unit.Month:
-        nextUnit = Unit.Year;
-        break;
-      case Unit.Year:
-        return null;
-    }
-
-    if (nextUnit) {
-      const newTime = getNextOrPrevTime(nextUnit, currentTime, options, isNext);
-
-      const nextRange = isNext ? ranges[0] : ranges[ranges.length - 1];
-
-      if (newTime != null && nextRange) {
-        return moveToStartOrEndOfRage(newTime, unit, nextRange, isNext);
-      }
-    }
-  }
-
-  return null;
 }
 
 function getValueByUnit(time: Dayjs, unit: Unit) {
@@ -276,10 +389,22 @@ function getValueByUnit(time: Dayjs, unit: Unit) {
     case Unit.WeekOfYear:
       return time.week();
     case Unit.Month:
-      return time.month();
+      return time.month() + 1;
     case Unit.Year:
       return time.year();
   }
+}
+
+function withDefaultRanges(unit: Unit, ranges: Range[] | undefined) {
+  if (ranges == null) {
+    return undefined;
+  }
+
+  if (ranges.length === 0) {
+    return getFullRange(unit) || [];
+  }
+
+  return ranges;
 }
 
 function getRangesByUnit(options: Options, unit: Unit) {
@@ -307,38 +432,28 @@ function getRangesByUnit(options: Options, unit: Unit) {
   }
 }
 
-function getNextOrPrevTime(unit: Unit, currentTime: Dayjs, options: Options, isNext = true): Dayjs | null {
-  let newTime: Dayjs | null = currentTime;
-  const { period } = options;
+function moveToNextPeriodRecursively(unit: Unit, time: Dayjs, options: Options, isNext: boolean): Dayjs | null {
+  const { newTime, inRange } = moveToNextPeriodByUnit(unit, time, options, isNext, false);
 
-  const value = getValueByUnit(currentTime, unit);
-  const ranges = getRangesByUnit(options, unit);
-
-  if (ranges && ranges.length) {
-    const { rangeIndex, inRange } = getOffsetByRanges(value, ranges);
-
-    if (!inRange) {
-      // out of range, move to the begining of next range
-
-      newTime = getStartOrEndTimeOfNextRange(unit, currentTime, options, ranges, rangeIndex, isNext);
-    } else {
-      // in range, move to next period and do out of range checking
-      const { periodNumber, opUnit } = getPeriodByUnit(period, unit);
-      newTime = isNext ? currentTime.add(periodNumber, opUnit) : currentTime.subtract(periodNumber, opUnit);
-
-      // if out of range, move to the begining of next range
-      const newValue = getValueByUnit(newTime, unit);
-      const { rangeIndex: newValueRangeIndex, inRange: newValueInRange } = getOffsetByRanges(newValue, ranges);
-
-      if (!newValueInRange) {
-        // out of range, move to the begining of next range
-
-        newTime = getStartOrEndTimeOfNextRange(unit, newTime, options, ranges, newValueRangeIndex, isNext);
-      }
-    }
+  if (newTime == null) {
+    return null;
   }
 
-  return newTime;
+  if (!inRange) {
+    return newTime;
+  }
+
+  const nextUnit = getNextUnit(unit, options);
+
+  if (nextUnit) {
+    return moveToNextPeriodRecursively(nextUnit, newTime, options, isNext);
+  } else {
+    return newTime;
+  }
+}
+
+function moveToNextPeriod(time: Dayjs, options: Options, isNext: boolean): Dayjs | null {
+  return moveToNextPeriodRecursively(Unit.Year, time, options, isNext);
 }
 
 interface Range {
@@ -366,7 +481,7 @@ class Result {
   private hasPrev = true;
   private hasNext = true;
 
-  constructor(options: Options, timestamp: number) {
+  constructor(options: Options, timestamp = dayjs().unix()) {
     this.options = options;
     this.originalTimestamp = timestamp;
     this.currentTime = dayjs.unix(timestamp);
@@ -381,7 +496,13 @@ class Result {
       return null;
     }
 
-    const newTime = getNextOrPrevTime(Unit.Sec, this.currentTime, this.options);
+    if (!this.hasNext) {
+      this.hasNext = true;
+
+      return this.currentTime;
+    }
+
+    const newTime = moveToNextPeriod(this.currentTime, this.options, false);
 
     this.hasPrev = newTime != null;
 
@@ -397,7 +518,13 @@ class Result {
       return null;
     }
 
-    const newTime = getNextOrPrevTime(Unit.Sec, this.currentTime, this.options, true);
+    if (!this.hasPrev) {
+      this.hasPrev = true;
+
+      return this.currentTime;
+    }
+
+    const newTime = moveToNextPeriod(this.currentTime, this.options, true);
 
     this.hasNext = newTime != null;
 
@@ -409,7 +536,7 @@ class Result {
   }
 }
 
-export function parseExpression(expression: string, timestamp: number) {
+export function parseExpression(expression: string, timestamp?: number) {
   const blocks = expression.split(" ");
   let options: Options;
 

@@ -1,2 +1,675 @@
-!function(e,r){"object"==typeof exports&&"undefined"!=typeof module?r(exports,require("dayjs"),require("dayjs/plugin/weekOfYear"),require("dayjs/plugin/weekday")):"function"==typeof define&&define.amd?define(["exports","dayjs","dayjs/plugin/weekOfYear","dayjs/plugin/weekday"],r):r((e=e||self).pcron={},e.dayjs,e.weekOfYear,e.weekday)}(this,function(e,r,n,a){var t,i;r=r&&Object.prototype.hasOwnProperty.call(r,"default")?r.default:r,n=n&&Object.prototype.hasOwnProperty.call(n,"default")?n.default:n,a=a&&Object.prototype.hasOwnProperty.call(a,"default")?a.default:a,r.extend(n),r.extend(a),function(e){e[e.Year=0]="Year",e[e.Month=1]="Month",e[e.Day=2]="Day",e[e.Hour=3]="Hour",e[e.Min=4]="Min",e[e.Sec=5]="Sec",e[e.WeekOfYear=6]="WeekOfYear",e[e.Weekday=7]="Weekday",e[e.WeekOfMonth=8]="WeekOfMonth"}(i||(i={}));var u=((t={})[i.Year]=void 0,t[i.Month]=[1,12],t[i.Day]=[1,31],t[i.Hour]=[0,23],t[i.Min]=[0,59],t[i.Sec]=[0,59],t[i.WeekOfYear]=[1,52],t[i.WeekOfMonth]=[1,4],t[i.Weekday]=[0,6],t);function o(e,r){return"*"===e?[]:e.split(",").map(function(e){var n=e.split("-"),a=n[1],t=parseInt(n[0]),i=parseInt(a);if(!function(e,r,n){if(isNaN(e)||isNaN(r))return!1;var a=u[n];return null==a||e>=a[0]&&r<=a[1]}(t,i,r))throw new Error("Invalid range "+t+"-"+i+" in");return{start:t,end:i}})}function s(e){var r=e.month,n=e.weekOfYear,a=e.weekOfMonth,t=e.weekday,u=e.day,s=e.hour,c=e.min,d=e.sec;return{period:e.period,year:o(e.year,i.Year),month:null!=r?o(r,i.Month):void 0,weekOfYear:null!=n?o(n,i.WeekOfYear):void 0,weekOfMonth:null!=a?o(a,i.WeekOfMonth):void 0,weekday:null!=t?o(t,i.Weekday):void 0,day:null!=u?o(u,i.Day):void 0,hour:o(s,i.Hour),min:o(c,i.Min),sec:o(d,i.Sec)}}function c(e,r,n,a){var t=a?n.start:n.end;switch(r){case i.Sec:return e.second(t);case i.Min:return e.minute(t);case i.Hour:return e.hour(t);case i.Day:return e.date(t);case i.Weekday:return e.weekday(t);case i.WeekOfMonth:var u=e.weekday();return e.startOf("month").week(t).weekday(u);case i.WeekOfYear:return e.week(t);case i.Month:return e.month(t);case i.Year:return e.year(t)}}function d(e,r){for(var n=0,a=!1,t=0;t<r.length;t++){n=t;var i=r[t],u=r[t-1];if(e>=i.start&&e<=i.end){a=!0;break}if(null!=u&&e>u.end&&e<i.start)break}return{rangeIndex:n,inRange:a}}function f(e,r,n,a,t,u){var o,s=n.weekOfMonth,d=n.day,f=a[t+1];if(null!=f)return c(r,e,f,u);switch(e){case i.Sec:o=i.Min;break;case i.Min:o=i.Hour;break;case i.Hour:o=null!=d?i.Day:i.Weekday;break;case i.Day:o=i.Month;break;case i.Weekday:o=null!=s?i.WeekOfMonth:i.WeekOfYear;break;case i.WeekOfMonth:case i.WeekOfYear:case i.Month:o=i.Year;break;case i.Year:return null}if(o){var h=l(o,r,n,u),k=u?a[0]:a[a.length-1];if(null!=h&&k)return c(h,e,k,u)}return null}function h(e,r){switch(r){case i.Sec:return e.second();case i.Min:return e.minute();case i.Hour:return e.hour();case i.Day:return e.date();case i.Weekday:return e.weekday();case i.WeekOfMonth:return parseInt(e.format("w"))-parseInt(e.startOf("M").format("w"))+1;case i.WeekOfYear:return e.week();case i.Month:return e.month();case i.Year:return e.year()}}function l(e,r,n,a){void 0===a&&(a=!0);var t=r,u=n.period,o=h(r,e),s=function(e,r){var n=e.year,a=e.month,t=e.weekOfYear,u=e.weekOfMonth,o=e.weekday,s=e.day,c=e.hour,d=e.min,f=e.sec;switch(r){case i.Sec:return f;case i.Min:return d;case i.Hour:return c;case i.Day:return s;case i.Weekday:return o;case i.WeekOfMonth:return u;case i.WeekOfYear:return t;case i.Month:return a;case i.Year:return n}}(n,e);if(s&&s.length){var c=d(o,s),l=c.rangeIndex;if(c.inRange){var k=function(e,r){var n,a,t=e.replace("P","").split("T"),u=t[0],o=t[1],s=void 0===o?"":o;switch(r){case i.Sec:n=s.match(/(\d+)[s]/i),a="second";break;case i.Min:n=s.match(/(\d+)[m]/i),a="minute";break;case i.Hour:n=s.match(/(\d+)[h]/i),a="hour";break;case i.Day:case i.Weekday:case i.WeekOfMonth:case i.WeekOfYear:n=u.match(/(\d+)[d]/i),a="day";break;case i.Month:n=u.match(/(\d+)[m]/i),a="month";break;case i.Year:n=u.match(/(\d+)[y]/i),a="year"}return n?{periodNumber:parseInt(n[1]),opUnit:a}:{periodNumber:NaN,opUnit:a}}(u,e),y=k.periodNumber,p=k.opUnit,m=d(h(t=a?r.add(y,p):r.subtract(y,p),e),s);m.inRange||(t=f(e,t,n,s,m.rangeIndex,a))}else t=f(e,r,n,s,l,a)}return t}var k=function(){function e(e,n){this.hasPrev=!0,this.hasNext=!0,this.options=e,this.originalTimestamp=n,this.currentTime=r.unix(n)}var n=e.prototype;return n.reset=function(){this.currentTime=r.unix(this.originalTimestamp)},n.prev=function(){if(!this.hasPrev)return null;var e=l(i.Sec,this.currentTime,this.options);return this.hasPrev=null!=e,null!=e&&(this.currentTime=e),e},n.next=function(){if(!this.hasNext)return null;var e=l(i.Sec,this.currentTime,this.options,!0);return this.hasNext=null!=e,null!=e&&(this.currentTime=e),e},e}();e.parseExpression=function(e,r){var n,a=e.split(" ");if(function(e){return-1!==e.indexOf("/")}(e))if(function(e){return 5===e.length}(a)){var t=a[0],i=a[1],u=a[3],o=a[4],c=a[5],d=a[2].split("/");n=s({period:t,year:i,weekOfYear:d[0],weekday:d[1],hour:u,min:o,sec:c})}else{var f=a[0],h=a[1],l=a[2],y=a[4],p=a[5],m=a[6],O=a[3].split("/");n=s({period:f,year:h,month:l,weekOfMonth:O[0],weekday:O[1],hour:y,min:p,sec:m})}else{var w=e.split(" ");n=s({period:w[0],year:w[1],month:w[2],day:w[3],hour:w[4],min:w[5],sec:w[6]})}return new k(n,r)}});
-//# sourceMappingURL=index.umd.js.map
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('dayjs'), require('dayjs/plugin/weekOfYear'), require('dayjs/plugin/weekday'), require('dayjs/plugin/advancedFormat')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'dayjs', 'dayjs/plugin/weekOfYear', 'dayjs/plugin/weekday', 'dayjs/plugin/advancedFormat'], factory) :
+  (global = global || self, factory(global.pcron = {}, global.dayjs, global.weekOfYear, global.weekday, global.advancedFormat));
+}(this, (function (exports, dayjs, weekOfYear, weekday, advancedFormat) {
+  dayjs = dayjs && Object.prototype.hasOwnProperty.call(dayjs, 'default') ? dayjs['default'] : dayjs;
+  weekOfYear = weekOfYear && Object.prototype.hasOwnProperty.call(weekOfYear, 'default') ? weekOfYear['default'] : weekOfYear;
+  weekday = weekday && Object.prototype.hasOwnProperty.call(weekday, 'default') ? weekday['default'] : weekday;
+  advancedFormat = advancedFormat && Object.prototype.hasOwnProperty.call(advancedFormat, 'default') ? advancedFormat['default'] : advancedFormat;
+
+  var _defaultRanges;
+  dayjs.extend(weekOfYear);
+  dayjs.extend(weekday);
+  dayjs.extend(advancedFormat);
+  var Unit;
+
+  (function (Unit) {
+    Unit["Year"] = "year";
+    Unit["Month"] = "month";
+    Unit["Day"] = "day";
+    Unit["Hour"] = "hour";
+    Unit["Min"] = "minute";
+    Unit["Sec"] = "second";
+    Unit["WeekOfYear"] = "weekOfYear";
+    Unit["Weekday"] = "weekday";
+    Unit["WeekOfMonth"] = "weekOfMonth";
+  })(Unit || (Unit = {}));
+
+  function isWeek(expression) {
+    return expression.indexOf("/") !== -1;
+  }
+
+  function isWeekOfYear(blocks) {
+    return blocks.length === 6;
+  }
+
+  var defaultRanges = (_defaultRanges = {}, _defaultRanges[Unit.Year] = undefined, _defaultRanges[Unit.Month] = [1, 12], _defaultRanges[Unit.Day] = [1, 31], _defaultRanges[Unit.Hour] = [0, 23], _defaultRanges[Unit.Min] = [0, 59], _defaultRanges[Unit.Sec] = [0, 59], _defaultRanges[Unit.WeekOfYear] = [1, 52], _defaultRanges[Unit.WeekOfMonth] = [1, 4], _defaultRanges[Unit.Weekday] = [0, 6], _defaultRanges);
+
+  function getFullRange(unit) {
+    var range = defaultRanges[unit];
+    return range ? [{
+      start: range[0],
+      end: range[1]
+    }] : undefined;
+  }
+
+  function validateRange(start, end, type) {
+    if (isNaN(start) || isNaN(end)) {
+      return false;
+    }
+
+    var range = defaultRanges[type];
+
+    if (range == null) {
+      return true;
+    }
+
+    var startEdge = range[0],
+        endEdge = range[1];
+    return start >= startEdge && end <= endEdge;
+  }
+
+  function parseRange(range, type) {
+    if (range === "*") {
+      return [];
+    }
+
+    var rangeArray = range.split(",");
+    return rangeArray.map(function (item) {
+      var _item$split = item.split("-"),
+          startString = _item$split[0],
+          endString = _item$split[1];
+
+      var start = parseInt(startString);
+      var end = endString != null ? parseInt(endString) : start;
+
+      if (!validateRange(start, end, type)) {
+        throw new Error("Invalid range " + start + "-" + end + " in");
+      }
+
+      return {
+        start: start,
+        end: end
+      };
+    }).sort(function (a, b) {
+      return a.start - b.start;
+    });
+  }
+
+  function parseBlocks(options) {
+    var period = options.period,
+        year = options.year,
+        month = options.month,
+        weekOfYear = options.weekOfYear,
+        weekOfMonth = options.weekOfMonth,
+        weekday = options.weekday,
+        day = options.day,
+        hour = options.hour,
+        min = options.min,
+        sec = options.sec;
+    var parsedYear = parseRange(year, Unit.Year);
+    var parsedMonth = month != null ? parseRange(month, Unit.Month) : undefined;
+    var parsedWeekOfYear = weekOfYear != null ? parseRange(weekOfYear, Unit.WeekOfYear) : undefined;
+    var parsedWeekOfMonth = weekOfMonth != null ? parseRange(weekOfMonth, Unit.WeekOfMonth) : undefined;
+    var parsedWeekday = weekday != null ? parseRange(weekday, Unit.Weekday) : undefined;
+    var parsedDay = day != null ? parseRange(day, Unit.Day) : undefined;
+    var parsedHour = parseRange(hour, Unit.Hour);
+    var parsedMin = parseRange(min, Unit.Min);
+    var parsedSec = parseRange(sec, Unit.Sec);
+    return {
+      period: period,
+      year: parsedYear,
+      month: parsedMonth,
+      weekOfYear: parsedWeekOfYear,
+      weekOfMonth: parsedWeekOfMonth,
+      weekday: parsedWeekday,
+      day: parsedDay,
+      hour: parsedHour,
+      min: parsedMin,
+      sec: parsedSec
+    };
+  }
+
+  function transformUnitToDayjsUnit(unit) {
+    switch (unit) {
+      case Unit.Sec:
+        return "second";
+
+      case Unit.Min:
+        return "minute";
+
+      case Unit.Hour:
+        return "hour";
+
+      case Unit.Day:
+        return "day";
+
+      case Unit.Weekday:
+        return "day";
+
+      case Unit.WeekOfMonth:
+        return "week";
+
+      case Unit.WeekOfYear:
+        return "week";
+
+      case Unit.Month:
+        return "month";
+
+      case Unit.Year:
+        return "year";
+    }
+  }
+
+  function moveToStartOrEndOfRange(unit, time, range, isNext) {
+    var edge = isNext ? range.start : range.end;
+
+    switch (unit) {
+      case Unit.Sec:
+        return time.second(edge);
+
+      case Unit.Min:
+        return time.minute(edge);
+
+      case Unit.Hour:
+        return time.hour(edge);
+
+      case Unit.Day:
+        return time.date(edge);
+
+      case Unit.Weekday:
+        return time.weekday(edge);
+
+      case Unit.WeekOfMonth:
+        var currentWeekday = time.weekday();
+        return time.startOf("month").week(edge).weekday(currentWeekday);
+
+      case Unit.WeekOfYear:
+        return time.week(edge);
+
+      case Unit.Month:
+        return time.month(edge - 1);
+
+      case Unit.Year:
+        return time.year(edge);
+    }
+  }
+
+  function getPrevUnit(unit, options) {
+    var weekOfMonthRanges = options.weekOfMonth,
+        dayRanges = options.day;
+
+    switch (unit) {
+      case Unit.Sec:
+        return Unit.Min;
+
+      case Unit.Min:
+        return Unit.Hour;
+
+      case Unit.Hour:
+        return dayRanges != null ? Unit.Day : Unit.Weekday;
+
+      case Unit.Day:
+        return Unit.Month;
+
+      case Unit.Weekday:
+        return weekOfMonthRanges != null ? Unit.WeekOfMonth : Unit.WeekOfYear;
+
+      case Unit.WeekOfMonth:
+        return Unit.Year;
+
+      case Unit.WeekOfYear:
+        return Unit.Year;
+
+      case Unit.Month:
+        return Unit.Year;
+
+      case Unit.Year:
+        return null;
+    }
+  }
+
+  function getNextUnit(unit, options) {
+    var weekOfYearRanges = options.weekOfYear,
+        weekOfMonthRanges = options.weekOfMonth;
+
+    switch (unit) {
+      case Unit.Sec:
+        return null;
+
+      case Unit.Min:
+        return Unit.Sec;
+
+      case Unit.Hour:
+        return Unit.Min;
+
+      case Unit.Day:
+        return Unit.Hour;
+
+      case Unit.Weekday:
+        return Unit.Hour;
+
+      case Unit.WeekOfMonth:
+        return Unit.Weekday;
+
+      case Unit.WeekOfYear:
+        return Unit.Weekday;
+
+      case Unit.Month:
+        return weekOfMonthRanges != null ? Unit.WeekOfMonth : Unit.Day;
+
+      case Unit.Year:
+        return weekOfYearRanges != null ? Unit.WeekOfYear : Unit.Month;
+    }
+  }
+
+  function getPeriodByUnit(period, unit) {
+    var _period$replace$split = period.replace("P", "").split("T"),
+        dateSection = _period$replace$split[0],
+        _period$replace$split2 = _period$replace$split[1],
+        timeSection = _period$replace$split2 === void 0 ? "" : _period$replace$split2;
+
+    var result;
+
+    switch (unit) {
+      case Unit.Sec:
+        result = timeSection.match(/(\d+)s/i);
+        break;
+
+      case Unit.Min:
+        result = timeSection.match(/(\d+)m/i);
+        break;
+
+      case Unit.Hour:
+        result = timeSection.match(/(\d+)h/i);
+        break;
+
+      case Unit.Day:
+      case Unit.Weekday:
+        result = dateSection.match(/(\d+)d/i);
+        break;
+
+      case Unit.WeekOfMonth:
+      case Unit.WeekOfYear:
+        result = dateSection.match(/(\d+)w/i);
+        break;
+
+      case Unit.Month:
+        result = dateSection.match(/(\d+)m/i);
+        break;
+
+      case Unit.Year:
+        result = dateSection.match(/(\d+)y/i);
+        break;
+    }
+
+    var periodNumber = result ? parseInt(result[1]) : 0;
+
+    if (isNaN(periodNumber)) {
+      throw new Error("invalid period " + period + ", unit: " + unit);
+    }
+
+    return periodNumber;
+  }
+
+  function addOrSubtractPeriod(time, period, unit, isNext) {
+    var opUnit = transformUnitToDayjsUnit(unit);
+    return isNext ? time.add(period, opUnit) : time.subtract(period, opUnit);
+  }
+
+  function moveToNextPeriodByUnit(unit, time, options, isNext, onlyChecking) {
+    var value = getValueByUnit(time, unit);
+    var ranges = withDefaultRanges(unit, getRangesByUnit(options, unit));
+
+    if (ranges) {
+      if (ranges.length) {
+        var _getRangeInfo = getRangeInfo(value, ranges, isNext),
+            rangeIndex = _getRangeInfo.rangeIndex,
+            inRange = _getRangeInfo.inRange;
+
+        if (inRange) {
+          if (!onlyChecking) {
+            var period = options.period;
+            var periodNumber = getPeriodByUnit(period, unit);
+            var newTime = addOrSubtractPeriod(time, periodNumber, unit, isNext);
+            return moveToNextPeriodByUnit(unit, newTime, options, isNext, true);
+          }
+        } else {
+          var nextRangeIndex = isNext ? rangeIndex + 1 : rangeIndex - 1;
+          var needToCarry = false;
+
+          if (nextRangeIndex > ranges.length - 1) {
+            nextRangeIndex = 0;
+            needToCarry = true;
+          } else if (nextRangeIndex < 0) {
+            nextRangeIndex = ranges.length - 1;
+            needToCarry = true;
+          }
+
+          var nextRange = ranges[nextRangeIndex];
+          var newTimeWithCurrentUnit = moveToStartOrEndOfRange(unit, time, nextRange, isNext);
+          var nextUnits = [];
+          var nextUnit = unit;
+
+          while (nextUnit != null) {
+            nextUnit = getNextUnit(nextUnit, options);
+
+            if (nextUnit != null) {
+              nextUnits.push(nextUnit);
+            }
+          }
+
+          var newTimeWithNextUnit = newTimeWithCurrentUnit;
+          nextUnits.forEach(function (nextUnit) {
+            var nextUnitRanges = withDefaultRanges(nextUnit, getRangesByUnit(options, nextUnit));
+
+            if (nextUnitRanges != null) {
+              var nextUnitRange = isNext ? nextUnitRanges[0] : nextUnitRanges[nextUnitRanges.length - 1];
+              newTimeWithNextUnit = moveToStartOrEndOfRange(nextUnit, newTimeWithNextUnit, nextUnitRange, isNext);
+            }
+          });
+
+          if (needToCarry) {
+            var prevUnit = getPrevUnit(unit, options);
+
+            if (prevUnit == null) {
+              return {
+                newTime: null,
+                inRange: inRange
+              };
+            } else {
+              var newTimeWithPrevUnit = addOrSubtractPeriod(newTimeWithNextUnit, 1, prevUnit, isNext);
+              return {
+                newTime: moveToNextPeriodByUnit(prevUnit, newTimeWithPrevUnit, options, isNext, true).newTime,
+                inRange: inRange
+              };
+            }
+          } else {
+            return {
+              newTime: newTimeWithNextUnit,
+              inRange: inRange
+            };
+          }
+        }
+      } else {
+        var _period = options.period;
+
+        var _periodNumber = getPeriodByUnit(_period, unit);
+
+        return {
+          newTime: addOrSubtractPeriod(time, _periodNumber, unit, isNext),
+          inRange: true
+        };
+      }
+    }
+
+    return {
+      newTime: time,
+      inRange: true
+    };
+  }
+
+  function getRangeInfo(num, ranges, isNext) {
+    var rangeIndex = isNext ? -1 : ranges.length;
+    var inRange = false;
+
+    for (var i = 0; i < ranges.length; i++) {
+      var nextRangeIndex = isNext ? rangeIndex + 1 : rangeIndex - 1;
+      var nextRange = ranges[nextRangeIndex];
+
+      if (num >= nextRange.start) {
+        rangeIndex = nextRangeIndex;
+      }
+
+      if (num >= nextRange.start && num <= nextRange.end) {
+        inRange = true;
+        break;
+      }
+    }
+
+    return {
+      rangeIndex: rangeIndex,
+      inRange: inRange
+    };
+  }
+
+  function getValueByUnit(time, unit) {
+    switch (unit) {
+      case Unit.Sec:
+        return time.second();
+
+      case Unit.Min:
+        return time.minute();
+
+      case Unit.Hour:
+        return time.hour();
+
+      case Unit.Day:
+        return time.date();
+
+      case Unit.Weekday:
+        return time.weekday();
+
+      case Unit.WeekOfMonth:
+        return parseInt(time.format("w")) - parseInt(time.startOf("M").format("w")) + 1;
+
+      case Unit.WeekOfYear:
+        return time.week();
+
+      case Unit.Month:
+        return time.month() + 1;
+
+      case Unit.Year:
+        return time.year();
+    }
+  }
+
+  function withDefaultRanges(unit, ranges) {
+    if (ranges == null) {
+      return undefined;
+    }
+
+    if (ranges.length === 0) {
+      return getFullRange(unit) || [];
+    }
+
+    return ranges;
+  }
+
+  function getRangesByUnit(options, unit) {
+    var year = options.year,
+        month = options.month,
+        weekOfYear = options.weekOfYear,
+        weekOfMonth = options.weekOfMonth,
+        weekday = options.weekday,
+        day = options.day,
+        hour = options.hour,
+        min = options.min,
+        sec = options.sec;
+
+    switch (unit) {
+      case Unit.Sec:
+        return sec;
+
+      case Unit.Min:
+        return min;
+
+      case Unit.Hour:
+        return hour;
+
+      case Unit.Day:
+        return day;
+
+      case Unit.Weekday:
+        return weekday;
+
+      case Unit.WeekOfMonth:
+        return weekOfMonth;
+
+      case Unit.WeekOfYear:
+        return weekOfYear;
+
+      case Unit.Month:
+        return month;
+
+      case Unit.Year:
+        return year;
+    }
+  }
+
+  function moveToNextPeriodRecursively(unit, time, options, isNext) {
+    var _moveToNextPeriodByUn = moveToNextPeriodByUnit(unit, time, options, isNext, false),
+        newTime = _moveToNextPeriodByUn.newTime,
+        inRange = _moveToNextPeriodByUn.inRange;
+
+    if (newTime == null) {
+      return null;
+    }
+
+    if (!inRange) {
+      return newTime;
+    }
+
+    var nextUnit = getNextUnit(unit, options);
+
+    if (nextUnit) {
+      return moveToNextPeriodRecursively(nextUnit, newTime, options, isNext);
+    } else {
+      return newTime;
+    }
+  }
+
+  function moveToNextPeriod(time, options, isNext) {
+    return moveToNextPeriodRecursively(Unit.Year, time, options, isNext);
+  }
+
+  var Result = /*#__PURE__*/function () {
+    function Result(options, timestamp) {
+      if (timestamp === void 0) {
+        timestamp = dayjs().unix();
+      }
+
+      this.hasPrev = true;
+      this.hasNext = true;
+      this.options = options;
+      this.originalTimestamp = timestamp;
+      this.currentTime = dayjs.unix(timestamp);
+    }
+
+    var _proto = Result.prototype;
+
+    _proto.reset = function reset() {
+      this.currentTime = dayjs.unix(this.originalTimestamp);
+    };
+
+    _proto.prev = function prev() {
+      if (!this.hasPrev) {
+        return null;
+      }
+
+      if (!this.hasNext) {
+        this.hasNext = true;
+        return this.currentTime;
+      }
+
+      var newTime = moveToNextPeriod(this.currentTime, this.options, false);
+      this.hasPrev = newTime != null;
+
+      if (newTime != null) {
+        this.currentTime = newTime;
+      }
+
+      return newTime;
+    };
+
+    _proto.next = function next() {
+      if (!this.hasNext) {
+        return null;
+      }
+
+      if (!this.hasPrev) {
+        this.hasPrev = true;
+        return this.currentTime;
+      }
+
+      var newTime = moveToNextPeriod(this.currentTime, this.options, true);
+      this.hasNext = newTime != null;
+
+      if (newTime != null) {
+        this.currentTime = newTime;
+      }
+
+      return newTime;
+    };
+
+    return Result;
+  }();
+
+  function parseExpression(expression, timestamp) {
+    var blocks = expression.split(" ");
+    var options;
+
+    if (isWeek(expression)) {
+      if (isWeekOfYear(blocks)) {
+        var period = blocks[0],
+            year = blocks[1],
+            _weekOfYear = blocks[2],
+            hour = blocks[3],
+            min = blocks[4],
+            sec = blocks[5];
+
+        var _weekOfYear$split = _weekOfYear.split("/"),
+            week = _weekOfYear$split[0],
+            _weekday = _weekOfYear$split[1];
+
+        options = parseBlocks({
+          period: period,
+          year: year,
+          weekOfYear: week,
+          weekday: _weekday,
+          hour: hour,
+          min: min,
+          sec: sec
+        });
+      } else {
+        var _period2 = blocks[0],
+            _year = blocks[1],
+            month = blocks[2],
+            weekOfMonth = blocks[3],
+            _hour = blocks[4],
+            _min = blocks[5],
+            _sec = blocks[6];
+
+        var _weekOfMonth$split = weekOfMonth.split("/"),
+            _week = _weekOfMonth$split[0],
+            _weekday2 = _weekOfMonth$split[1];
+
+        options = parseBlocks({
+          period: _period2,
+          year: _year,
+          month: month,
+          weekOfMonth: _week,
+          weekday: _weekday2,
+          hour: _hour,
+          min: _min,
+          sec: _sec
+        });
+      }
+    } else {
+      var _expression$split = expression.split(" "),
+          _period3 = _expression$split[0],
+          _year2 = _expression$split[1],
+          _month = _expression$split[2],
+          day = _expression$split[3],
+          _hour2 = _expression$split[4],
+          _min2 = _expression$split[5],
+          _sec2 = _expression$split[6];
+
+      options = parseBlocks({
+        period: _period3,
+        year: _year2,
+        month: _month,
+        day: day,
+        hour: _hour2,
+        min: _min2,
+        sec: _sec2
+      });
+    }
+
+    return new Result(options, timestamp);
+  }
+
+  exports.parseExpression = parseExpression;
+
+})));

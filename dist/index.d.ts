@@ -21,10 +21,10 @@ declare class Result {
     private currentTime;
     private hasPrev;
     private hasNext;
-    constructor(options: Options, timestamp: number);
+    constructor(options: Options, timestamp?: number);
     reset(): void;
     prev(): dayjs.Dayjs | null;
     next(): dayjs.Dayjs | null;
 }
-export declare function parseExpression(expression: string, timestamp: number): Result;
+export declare function parseExpression(expression: string, timestamp?: number): Result;
 export {};
