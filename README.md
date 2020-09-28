@@ -34,12 +34,12 @@ npm i pcron
 import { parseExpression } from "pcron";
 import dayjs from "dayjs";
 
-const timestamp = dayjs("2020-09-23T00:00:00+08:00").unix();
+const timestamp = dayjs("2020-09-23T00:00:00").unix();
 // timestamp is a unix timestamp, a current timestamp will be used by default if you omit this parameter
 const exp = parseExpression("PT1s 2020 9 23 0 0-1 0-1", timestamp);
-const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:00:01+08:00
-const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:01:00+08:00
-const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:01:01+08:00
+const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:00:01
+const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:01:00
+const nextDate = exp.next(); // you will get a dayjs object represent 2020-09-23T00:01:01
 const nextDate = exp.next(); // you will get null
 ```
 
