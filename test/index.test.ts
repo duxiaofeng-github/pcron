@@ -4,9 +4,11 @@ import dayjs from "dayjs";
 const timestamp = dayjs("2020-09-23T00:00:00+08:00").unix();
 
 test("parse expression", () => {
-  const exp = parseExpression("PT1s * * * * * *", timestamp);
+  const exp = parseExpression("PT1s 2020 9 23 0 0-1 0-1", timestamp);
   expect(exp.next().unix()).toBe(timestamp + 1);
-  expect(exp.next().unix()).toBe(timestamp + 2);
+  expect(exp.next().unix()).toBe(timestamp + 60);
+  expect(exp.next().unix()).toBe(timestamp + 60 + 1);
+  expect(exp.next()).toBeNull();
 });
 
 test("complete period expression", () => {
