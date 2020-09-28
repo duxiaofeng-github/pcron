@@ -20,18 +20,6 @@ test("uncontinuous period expression", () => {
   expect(exp.next().unix()).toBe(dayjs("2022-01-05T06:00:08+08:00").unix());
 });
 
-test("expression with week of month", () => {
-  const exp = parseExpression("P1W2D * * 1-3/0-5 * * *", dayjs("2020-01-01T00:00:00+08:00").unix());
-  expect(exp.next().unix()).toBe(dayjs("2020-01-10T00:00:00+08:00").unix());
-  expect(exp.next().unix()).toBe(dayjs("2020-01-19T00:00:00+08:00").unix());
-});
-
-test("expression with week of year", () => {
-  const exp = parseExpression("P1W2D * 1-3/0-5 * * *", dayjs("2020-01-01T00:00:00+08:00").unix());
-  expect(exp.next().unix()).toBe(dayjs("2020-01-10T00:00:00+08:00").unix());
-  expect(exp.next().unix()).toBe(dayjs("2020-01-19T00:00:00+08:00").unix());
-});
-
 test("expression with multi-ranges", () => {
   const exp = parseExpression("PT4s * * * * * 1-10,20-30", dayjs("2020-01-01T00:00:00+08:00").unix());
   expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:01+08:00").unix());
@@ -60,6 +48,17 @@ test("last one timestamp", () => {
   expect(exp.prev().unix()).toBe(dayjs("2020-01-01T00:00:01+08:00").unix());
   expect(exp.prev()).toBeNull();
   expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:01+08:00").unix());
+});
+
+test("continuous range expression", () => {
+  const exp = parseExpression("PT9s 2020 1 1 0 0 0-9,9-19,19-29,29-39,39-49,49-59", dayjs("2020-01-01T00:00:00+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:09+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:18+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:27+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:36+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:45+08:00").unix());
+  expect(exp.next().unix()).toBe(dayjs("2020-01-01T00:00:54+08:00").unix());
+  expect(exp.next()).toBeNull();
 });
 
 test("timestamp is out of range: next time should be next year", () => {
