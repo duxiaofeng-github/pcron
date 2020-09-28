@@ -50,3 +50,10 @@ const nextDate = exp.next(); // you will get null
 ## License
 
 MIT
+
+[npm-image]: https://img.shields.io/npm/v/pcron.svg?style=flat
+[npm-url]: https://npmjs.org/package/pcron
+[downloads-image]: https://img.shields.io/npm/dm/pcron.svg?style=flat
+[downloads-url]: https://npmjs.org/package/pcron
+[travis-image]: https://img.shields.io/travis/duxiaofeng-github/pcron.svg?style=flat
+[travis-url]: https://travis-ci.org/duxiaofeng-github/pcron
