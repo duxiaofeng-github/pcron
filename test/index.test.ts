@@ -1,5 +1,8 @@
 import { parseExpression } from "..";
 import dayjs from "dayjs";
+import zhCN from "dayjs/locale/zh-cn";
+
+dayjs.locale(zhCN); // set the first day of week to Monday
 
 const timestamp = dayjs("2020-09-23T00:00:00").unix();
 
@@ -60,6 +63,67 @@ test("continuous range expression", () => {
   expect(exp.next().format()).toBe(dayjs("2020-01-01T00:00:36").format());
   expect(exp.next().format()).toBe(dayjs("2020-01-01T00:00:45").format());
   expect(exp.next().format()).toBe(dayjs("2020-01-01T00:00:54").format());
+  expect(exp.next()).toBeNull();
+});
+
+test("expression with week of month", () => {
+  const exp = parseExpression("P3D 2020 1-2 1-5/0-4 * * *", dayjs("2019-12-29T00:00:00").unix());
+  expect(exp.next().format()).toBe(dayjs("2020-01-01T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-06T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-09T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-13T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-16T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-20T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-23T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-27T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-30T00:00:00").format());
+
+  expect(exp.next().format()).toBe(dayjs("2020-02-03T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-06T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-10T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-13T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-17T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-20T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-24T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-02-27T00:00:00").format());
+  expect(exp.next()).toBeNull();
+
+  const exp2 = parseExpression("P1D * 5-6 1-6/5-6 * * *", dayjs("2020-04-30T00:00:00").unix());
+
+  // May of 2020 has 5 weekends and 6 weeks, June of 2020 has 4 weekends and 5 weeks
+  expect(exp2.next().format()).toBe(dayjs("2020-05-02T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-03T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-09T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-10T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-16T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-17T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-23T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-24T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-30T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-05-31T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-06T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-07T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-13T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-14T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-20T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-21T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-27T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2020-06-28T00:00:00").format());
+  expect(exp2.next().format()).toBe(dayjs("2021-05-01T00:00:00").format());
+});
+
+test("expression with week of year", () => {
+  const exp = parseExpression("P3D 2020 1-5/0-4 * * *", dayjs("2019-12-31T00:00:00").unix());
+  expect(exp.next().format()).toBe(dayjs("2020-01-01T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-06T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-09T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-13T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-16T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-20T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-23T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-27T00:00:00").format());
+  expect(exp.next().format()).toBe(dayjs("2020-01-30T00:00:00").format());
+
   expect(exp.next()).toBeNull();
 });
 
