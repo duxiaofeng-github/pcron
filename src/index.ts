@@ -324,3 +324,5 @@ export function parseExpression(expression: string, timestamp?: number) {
 
   return new Result(options, timestamp);
 }
+
+export default parseExpression;
