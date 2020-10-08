@@ -13,3 +13,7 @@ fix default export
 # 0.0.4
 
 fix default export
+
+# 0.0.5
+
+rebuild dist
