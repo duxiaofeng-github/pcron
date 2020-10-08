@@ -17,3 +17,7 @@ fix default export
 # 0.0.5
 
 rebuild dist
+
+# 0.0.6
+
+fix sensitive case
