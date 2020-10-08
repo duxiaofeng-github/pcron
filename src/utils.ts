@@ -107,7 +107,7 @@ export function getNextUnit(unit: Unit, options: Options): Unit | null {
 }
 
 export function getPeriodByUnit(period: string, unit: Unit): number {
-  const [dateSection, timeSection = ""] = period.replace("P", "").split("T");
+  const [dateSection, timeSection = ""] = period.toLowerCase().replace(/p/i, "").split("t");
   let result;
 
   switch (unit) {
