@@ -11,7 +11,8 @@
     "clean": "rm -rf dist",
     "dev": "microbundle watch --no-compress --no-sourcemap",
     "build": "microbundle",
-    "test": "cd test && jest"
+    "test": "cd test && jest",
+    "pub": "yarn build && npm version patch && npm publish"
   },
   "dependencies": {
     "dayjs": "^1.8.36"
